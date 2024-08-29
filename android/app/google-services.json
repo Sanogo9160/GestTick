@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "252643550630",
+    "project_id": "gestticket-5ce58",
+    "storage_bucket": "gestticket-5ce58.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252643550630:android:c75d9751103c117e8a1b67",
+        "android_client_info": {
+          "package_name": "com.example.gesttick"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuGdqUDTgcdU4CqqTg3DDbObX3QwmyXxI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
