@@ -7,15 +7,14 @@ import 'package:gesttick/services/firestore_service.dart';
 class UserProvider with ChangeNotifier {
   UserModel? _user;
   final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   UserModel? get user => _user;
 
   Future<void> loadUser() async {
-    // Récupérer l'utilisateur connecté depuis Firebase
     User? firebaseUser = _authService.getCurrentUser();
     if (firebaseUser != null) {
-      // Charger les données utilisateur depuis Firestore
-      _user = await FirestoreService().getUserById(firebaseUser.uid);
+      _user = await _firestoreService.getUserById(firebaseUser.uid);
       notifyListeners();
     }
   }

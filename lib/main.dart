@@ -1,8 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:gesttick/routes.dart';
+import 'package:gesttick/screens/home_screen.dart';
 import 'package:gesttick/screens/login_screen.dart';
-import 'package:gesttick/screens/home_screen.dart'; // Importez votre écran d'accueil
-import 'package:gesttick/screens/ErrorScreen.dart';
+import 'package:gesttick/screens/register_screen.dart';
+
+ // Assurez-vous que ce fichier existe
 import 'firebase_options.dart'; // Importez le fichier généré
 
 void main() async {
@@ -21,20 +24,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/login', // Route initiale
-      routes: {
-        '/login': (context) => LoginScreen(),
-        '/home': (context) => HomeScreen(), // Ajoutez l'écran d'accueil
-      },
-      onGenerateRoute: (settings) {
-        // Gérer les routes non définies ici
-        return null;
-      },
+      initialRoute: '/welcome',
+      onGenerateRoute: RouteGenerator.generateRoute,
       onUnknownRoute: (settings) {
-        // Route inconnue, retournez une page d'erreur ou autre
         return MaterialPageRoute(
-          builder: (context) =>
-              ErrorScreen(), // Créez une page d'erreur si nécessaire
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text('Erreur 404'),
+            ),
+            body: Center(
+              child: Text('Page non trouvée'),
+            ),
+          ),
         );
       },
     );

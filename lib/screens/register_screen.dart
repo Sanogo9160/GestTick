@@ -1,5 +1,7 @@
-// lib/screens/register_screen.dart
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:gesttick/services/auth_service.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -7,22 +9,44 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
-  String _name = '';
-  String _email = '';
-  String _password = '';
-  String _confirmPassword = '';
+  final AuthService _authService = AuthService();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  String _selectedRole = 'apprenant'; // Rôle par défaut
+  bool _passwordObscureText = true;
+  bool _confirmPasswordObscureText = true;
 
-  // Méthode pour traiter l'inscription
-  void _submitRegistration() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      // Logique pour traiter l'inscription, comme appeler Firebase Authentication
-      // Vous pouvez ajouter votre logique d'inscription ici
-      print('Nom: $_name');
-      print('Email: $_email');
-      print('Mot de passe: $_password');
-      // Ajouter le code d'inscription ici
+  void _togglePasswordVisibility() {
+    setState(() {
+      _passwordObscureText = !_passwordObscureText;
+    });
+  }
+
+  void _toggleConfirmPasswordVisibility() {
+    setState(() {
+      _confirmPasswordObscureText = !_confirmPasswordObscureText;
+    });
+  }
+
+  Future<void> _register() async {
+    if (_passwordController.text == _confirmPasswordController.text) {
+      bool success = await _authService.registerWithEmailAndPassword(
+        _emailController.text,
+        _passwordController.text,
+        _selectedRole,
+      );
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec de l\'inscription')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Les mots de passe ne correspondent pas')),
+      );
     }
   }
 
@@ -33,79 +57,140 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: Text('Inscription'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Nom'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre nom';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _name = value!;
-                },
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 20),
+            Text(
+              'Email',
+              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+            ),
+            SizedBox(height: 8.0),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                hintText: 'Entrez votre email',
+                suffixIcon: Icon(Icons.alternate_email, color: Colors.deepPurple),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
               ),
-              SizedBox(height: 16.0),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre email';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Veuillez entrer un email valide';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _email = value!;
-                },
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 24.0),
+            Text(
+              'Mot de passe',
+              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+            ),
+            SizedBox(height: 8.0),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                hintText: 'Entrez votre mot de passe',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _passwordObscureText ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.deepPurple,
+                  ),
+                  onPressed: _togglePasswordVisibility,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
               ),
-              SizedBox(height: 16.0),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Mot de passe'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un mot de passe';
-                  }
-                  if (value.length < 6) {
-                    return 'Le mot de passe doit contenir au moins 6 caractères';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _password = value!;
-                },
+              obscureText: _passwordObscureText,
+            ),
+            SizedBox(height: 24.0),
+            Text(
+              'Confirmez le mot de passe',
+              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+            ),
+            SizedBox(height: 8.0),
+            TextField(
+              controller: _confirmPasswordController,
+              decoration: InputDecoration(
+                hintText: 'Confirmez votre mot de passe',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _confirmPasswordObscureText ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.deepPurple,
+                  ),
+                  onPressed: _toggleConfirmPasswordVisibility,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
               ),
-              SizedBox(height: 16.0),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Confirmer le mot de passe'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez confirmer votre mot de passe';
-                  }
-                  if (value != _password) {
-                    return 'Les mots de passe ne correspondent pas';
-                  }
-                  return null;
-                },
+              obscureText: _confirmPasswordObscureText,
+            ),
+            SizedBox(height: 24.0),
+            DropdownButton<String>(
+              value: _selectedRole,
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedRole = newValue!;
+                });
+              },
+              items: <String>['apprenant', 'formateur', 'administrateur']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 24.0),
+            ElevatedButton(
+              onPressed: _register,
+              child: Text('S\'inscrire'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.deepPurple,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: 5,
               ),
-              SizedBox(height: 24.0),
-              ElevatedButton(
-                onPressed: _submitRegistration,
-                child: Text('S\'inscrire'),
+            ),
+            SizedBox(height: 16.0),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Vous avez déjà un compte ? ',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                  TextSpan(
+                    text: 'Se connecter',
+                    style: TextStyle(
+                      color: Colors.deepPurple,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.pushNamed(context, '/login');
+                      },
+                  ),
+                ],
               ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

@@ -1,73 +1,46 @@
 // lib/services/firestore_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gesttick/models/user.dart';
+import 'package:gesttick/models/ticket.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Méthode pour obtenir tous les tickets
-  Future<List<Map<String, dynamic>>> getTickets() async {
+  // Ajouter un ticket
+  Future<void> addTicket(Ticket ticket) async {
     try {
-      QuerySnapshot snapshot = await _db.collection('tickets').get();
-      return snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+      await _db.collection('tickets').doc(ticket.id).set(ticket.toMap());
     } catch (e) {
-      print('Erreur lors de la récupération des tickets: $e');
-      return [];
+      print(e.toString());
     }
   }
 
-  // Méthode pour ajouter un nouveau ticket
-  Future<void> addTicket(Map<String, dynamic> ticketData) async {
+  // Mettre à jour un ticket
+  Future<void> updateTicket(Ticket ticket) async {
     try {
-      await _db.collection('tickets').add(ticketData);
+      await _db.collection('tickets').doc(ticket.id).update(ticket.toMap());
     } catch (e) {
-      print('Erreur lors de l\'ajout du ticket: $e');
+      print(e.toString());
     }
   }
 
-  // Méthode pour mettre à jour un ticket existant
-  Future<void> updateTicket(String ticketId, Map<String, dynamic> ticketData) async {
-    try {
-      await _db.collection('tickets').doc(ticketId).update(ticketData);
-    } catch (e) {
-      print('Erreur lors de la mise à jour du ticket: $e');
-    }
+  // Récupérer les tickets
+  Stream<List<Ticket>> getTickets() {
+    return _db.collection('tickets').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => Ticket.fromMap(doc.data())).toList();
+    });
   }
 
-  // Méthode pour supprimer un ticket
+  // Supprimer un ticket
   Future<void> deleteTicket(String ticketId) async {
     try {
       await _db.collection('tickets').doc(ticketId).delete();
     } catch (e) {
-      print('Erreur lors de la suppression du ticket: $e');
+      print(e.toString());
     }
   }
 
-  // Méthode pour obtenir les détails d'un ticket spécifique
-  Future<Map<String, dynamic>?> getTicketDetails(String ticketId) async {
-    try {
-      DocumentSnapshot doc = await _db.collection('tickets').doc(ticketId).get();
-      return doc.data() as Map<String, dynamic>?;
-    } catch (e) {
-      print('Erreur lors de la récupération des détails du ticket: $e');
-      return null;
-    }
-  }
-
- // Méthode pour obtenir les données d'un utilisateur par ID
-  Future<UserModel?> getUserById(String userId) async {
-    try {
-      DocumentSnapshot doc = await _db.collection('users').doc(userId).get();
-      if (doc.exists) {
-        return UserModel.fromFirestore(doc.data() as Map<String, dynamic>);
-      } else {
-        print('Utilisateur non trouvé');
-        return null;
-      }
-    } catch (e) {
-      print('Erreur lors de la récupération de l\'utilisateur: $e');
-      return null;
-    }
-  }
+//
+  getUserById(String uid) {}
 
 }

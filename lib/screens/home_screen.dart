@@ -1,68 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'create_ticket_screen.dart';
-import 'ticket_details_screen.dart';
+import 'package:gesttick/models/ticket.dart';
+import 'package:gesttick/services/firestore_service.dart';
+import 'package:gesttick/widgets/ticket_card.dart';
 
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class HomeScreen extends StatelessWidget {
+  final FirestoreService _firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gestion des Tickets'),
+        title: Text('Gestion de Tickets'),
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.logout),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreateTicketScreen()),
-              );
+              // Ajoutez ici votre logique de déconnexion
+              print("Déconnexion de l'utilisateur");
             },
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('tickets').snapshots(),
+      body: StreamBuilder<List<Ticket>>(
+        stream: _firestoreService.getTickets(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData) {
-            return Center(child: Text('Aucun ticket disponible.'));
-          }
-
-          final tickets = snapshot.data!.docs;
-
+          final tickets = snapshot.data!;
           return ListView.builder(
             itemCount: tickets.length,
             itemBuilder: (context, index) {
-              final ticket = tickets[index].data() as Map<String, dynamic>;
-
-              return ListTile(
-                title: Text(ticket['titre'] ?? 'Sans titre'),
-                subtitle: Text(ticket['description'] ?? 'Pas de description'),
+              return TicketCard(
+                ticket: tickets[index],
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TicketDetailsScreen(
-                        ticketId: tickets[index].id,
-                      ),
-                    ),
-                  );
+                  // Actions à effectuer lors de la sélection d'un ticket
+                  print('Ticket sélectionné : ${tickets[index].title}');
                 },
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Logique pour ajouter un nouveau ticket
+          print('Ajouter un nouveau ticket');
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
