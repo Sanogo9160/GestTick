@@ -50,4 +50,12 @@ class Ticket {
       'trainerId': trainerId,
     };
   }
+
+  // Method to check if the ticket is recent
+  bool isRecent() {
+    final now = DateTime.now();
+    final sevenDaysAgo = now.subtract(Duration(days: 7));
+
+    return createdAt.isAfter(sevenDaysAgo);
+  }
 }
