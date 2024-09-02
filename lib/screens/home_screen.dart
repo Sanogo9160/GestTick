@@ -6,6 +6,7 @@ import 'package:gesttick/services/firestore_service.dart';
 import 'package:gesttick/screens/create_ticket_screen.dart';
 import 'package:gesttick/screens/edit_ticket_screen.dart';
 import 'package:gesttick/providers/user_provider.dart';
+import 'package:gesttick/screens/trainer_ticket_screen.dart'; // Import the trainer ticket screen
 import 'package:gesttick/widgets/ticket_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -104,7 +105,10 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: Icon(Icons.reply_all),
               title: Text('Répondre aux tickets'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TrainerTicketScreen()),
+                );
               },
             ),
             ListTile(
@@ -193,8 +197,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Trainer Dashboard
   Widget _buildTrainerDashboard() {
-    final inProgressTickets = _tickets.where((ticket) => ticket.status == 'En cours').toList();
-    return _buildTicketList(inProgressTickets);
+    // Optionally filter tickets for trainers
+    return _buildTicketList(_tickets);
   }
 
   // Student Dashboard

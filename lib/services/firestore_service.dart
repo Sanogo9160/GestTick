@@ -49,4 +49,18 @@ class FirestoreService {
 //
   getUserById(String uid) {}
 
+//method for trainer
+Stream<List<Ticket>> getTicketsForTrainer() {
+    return _db.collection('tickets')
+      .where('status', isEqualTo: 'En attente')
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+      .map((doc) => Ticket.fromDocument(doc))
+      .toList());
+  }
+
+  Future<void> updateTicketStatus(String ticketId, String status) async {
+    await _db.collection('tickets').doc(ticketId).update({'status': status});
+  }
+
 }
