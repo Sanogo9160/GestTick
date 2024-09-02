@@ -10,6 +10,7 @@ class Ticket {
   Timestamp updatedAt;
   String studentId;
   String trainerId;
+  
 
   Ticket({
     required this.id,
@@ -21,6 +22,7 @@ class Ticket {
     required this.updatedAt,
     required this.studentId,
     required this.trainerId,
+     
   });
 
   factory Ticket.fromDocument(DocumentSnapshot doc) {
@@ -35,6 +37,7 @@ class Ticket {
       updatedAt: data['updatedAt'] as Timestamp,
       studentId: data['studentId'] ?? '',
       trainerId: data['trainerId'] ?? '',
+     
     );
   }
 
@@ -73,6 +76,7 @@ class Ticket {
     Timestamp? updatedAt,
     String? studentId,
     String? trainerId,
+   
   }) {
     return Ticket(
       id: id ?? this.id,
@@ -84,8 +88,11 @@ class Ticket {
       updatedAt: updatedAt ?? this.updatedAt,
       studentId: studentId ?? this.studentId,
       trainerId: trainerId ?? this.trainerId,
+      
     );
   }
+
+  static empty() {}
 
 
 }

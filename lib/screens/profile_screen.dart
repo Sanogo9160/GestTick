@@ -1,6 +1,9 @@
 // lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
-import 'package:gesttick/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:gesttick/providers/user_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -9,16 +12,104 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _name = 'Admin';
-  String _email = 'admin45@example.com';
+  final _fullNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmNewPasswordController = TextEditingController();
 
-  // Méthode pour sauvegarder les modifications du profil
-  void _saveProfile() {
+  bool _newPasswordObscureText = true;
+  bool _confirmNewPasswordObscureText = true;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _toggleNewPasswordVisibility() {
+    setState(() {
+      _newPasswordObscureText = !_newPasswordObscureText;
+    });
+  }
+
+  void _toggleConfirmNewPasswordVisibility() {
+    setState(() {
+      _confirmNewPasswordObscureText = !_confirmNewPasswordObscureText;
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        DocumentSnapshot doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>?; 
+          if (data != null) {
+            setState(() {
+              _fullNameController.text = data['fullName'] ?? '';
+              _emailController.text = data['email'] ?? '';
+              _phoneController.text = data['phone'] ?? '';
+            });
+          } else {
+            print('Les données du document sont nulles.');
+          }
+        } else {
+          print('Le document n\'existe pas.');
+        }
+      } catch (e) {
+        print('Erreur lors de la récupération des données utilisateur : $e');
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      // Ajouter la logique pour mettre à jour le profil dans la base de données
-      print('Nom: $_name');
-      print('Email: $_email');
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        try {
+          // Update user profile information
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+            'fullName': _fullNameController.text,
+            'email': _emailController.text,
+            'phone': _phoneController.text,
+          });
+
+          // Update user password if changed
+          if (_newPasswordController.text.isNotEmpty &&
+              _newPasswordController.text == _confirmNewPasswordController.text) {
+            try {
+              // Re-authenticate the user with current password
+              final credential = EmailAuthProvider.credential(
+                email: user.email!,
+                password: _currentPasswordController.text,
+              );
+
+              await user.reauthenticateWithCredential(credential);
+
+              // Update password
+              await user.updatePassword(_newPasswordController.text);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Mot de passe mis à jour')));
+            } catch (e) {
+              print('Erreur lors de la ré-authentification ou de la mise à jour : $e');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la mise à jour du mot de passe')));
+            }
+          } else if (_newPasswordController.text.isNotEmpty || _confirmNewPasswordController.text.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Les mots de passe ne correspondent pas')));
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profil mis à jour')));
+        } catch (e) {
+          print('Erreur lors de la mise à jour du profil : $e');
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la mise à jour')));
+        }
+      }
     }
   }
 
@@ -35,23 +126,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              TextFormField(
-                initialValue: _name,
-                decoration: InputDecoration(labelText: 'Nom'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre nom';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _name = value!;
-                },
+              Text(
+                'Informations personnelles',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.deepPurple),
+              ),
+              SizedBox(height: 20),
+              _buildTextField(
+                controller: _fullNameController,
+                label: 'Nom et Prenom',
+                enabled: _isEditing,
               ),
               SizedBox(height: 16.0),
-              TextFormField(
-                initialValue: _email,
-                decoration: InputDecoration(labelText: 'Email'),
+              _buildTextField(
+                controller: _emailController,
+                label: 'Email',
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -62,19 +150,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _email = value!;
-                },
+                enabled: _isEditing,
               ),
+              SizedBox(height: 16.0),
+              _buildTextField(
+                controller: _phoneController,
+                label: 'Numéro de téléphone',
+                keyboardType: TextInputType.phone,
+                enabled: _isEditing,
+              ),
+              SizedBox(height: 16.0),
+              if (_isEditing) 
+                _buildPasswordField(
+                  controller: _currentPasswordController,
+                  label: 'Mot de passe actuel',
+                  obscureText: true, toggleVisibility: () {  },
+                ),
+              SizedBox(height: 16.0),
+              if (_isEditing) 
+                _buildPasswordField(
+                  controller: _newPasswordController,
+                  label: 'Nouveau mot de passe',
+                  obscureText: _newPasswordObscureText,
+                  toggleVisibility: _toggleNewPasswordVisibility,
+                ),
+              SizedBox(height: 16.0),
+              if (_isEditing) 
+                _buildPasswordField(
+                  controller: _confirmNewPasswordController,
+                  label: 'Confirmer le nouveau mot de passe',
+                  obscureText: _confirmNewPasswordObscureText,
+                  toggleVisibility: _toggleConfirmNewPasswordVisibility,
+                ),
               SizedBox(height: 24.0),
-              ElevatedButton(
-                onPressed: _saveProfile,
-                child: Text('Sauvegarder'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Colors.deepPurple),
+                    onPressed: () {
+                      setState(() {
+                        _isEditing = true;
+                      });
+                    },
+                  ),
+                  if (_isEditing)
+                    IconButton(
+                      icon: Icon(Icons.cancel, color: Colors.redAccent),
+                      onPressed: () {
+                        setState(() {
+                          _isEditing = false;
+                          _loadUserData(); // Reload user data to discard changes
+                        });
+                      },
+                    ),
+                  if (_isEditing)
+                    IconButton(
+                      icon: Icon(Icons.save, color: Colors.green),
+                      onPressed: _saveProfile,
+                    ),
+                ],
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    bool enabled = true,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+      ),
+      keyboardType: keyboardType,
+      validator: validator,
+      enabled: enabled,
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required bool obscureText,
+    required VoidCallback toggleVisibility,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
+          onPressed: toggleVisibility,
+        ),
+      ),
+      obscureText: obscureText,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Veuillez entrer un mot de passe';
+        }
+        return null;
+      },
     );
   }
 }

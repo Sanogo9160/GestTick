@@ -33,26 +33,6 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
             SizedBox(height: 16),
             Text('Statut: ${ticket.status}', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('Catégorie: ${ticket.category}'),
-            SizedBox(height: 16),
-            if (ticket.status != 'Résolu') ...[
-              ElevatedButton(
-                onPressed: () async {
-                  await _firestoreService.updateTicket(Ticket(
-                    id: ticket.id,
-                    title: ticket.title,
-                    description: ticket.description,
-                    status: 'Résolu',
-                    category: ticket.category,
-                    createdAt: ticket.createdAt,
-                    updatedAt: Timestamp.now(),
-                    studentId: ticket.studentId,
-                    trainerId: ticket.trainerId,
-                  ));
-                  Navigator.pop(context);
-                },
-                child: Text('Marquer comme Résolu'),
-              ),
-            ],
           ],
         ),
       ),

@@ -4,35 +4,44 @@ import 'package:gesttick/models/ticket.dart';
 import 'package:gesttick/services/firestore_service.dart';
 
 class EditTicketScreen extends StatelessWidget {
-  final Ticket ticket;
+  final Ticket? ticket; // Ticket optionnel
   final FirestoreService _firestoreService = FirestoreService();
 
-  EditTicketScreen({required this.ticket});
+  EditTicketScreen({this.ticket});
 
   @override
   Widget build(BuildContext context) {
-    final _titleController = TextEditingController(text: ticket.title);
-    final _descriptionController = TextEditingController(text: ticket.description);
-    final _categoryController = TextEditingController(text: ticket.category);
-    String _status = ticket.status;
+    final _titleController = TextEditingController(text: ticket?.title ?? '');
+    final _descriptionController = TextEditingController(text: ticket?.description ?? '');
+    final _categoryController = TextEditingController(text: ticket?.category ?? '');
+    String _status = ticket?.status ?? 'Non Résolu'; // Valeur par défaut si aucun ticket
 
-  void _submit() async {
-  final updatedTicket = ticket.copyWith(
-    title: _titleController.text,
-    description: _descriptionController.text,
-    category: _categoryController.text,
-    status: _status,
-    updatedAt: Timestamp.now(),
-  );
+    void _submit() async {
+      final updatedTicket = Ticket(
+        id: ticket?.id ?? '', // Utiliser un ID vide si aucun ticket n'est fourni
+        title: _titleController.text,
+        description: _descriptionController.text,
+        category: _categoryController.text,
+        status: _status,
+        createdAt: ticket?.createdAt ?? Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        studentId: ticket?.studentId ?? '',
+        trainerId: ticket?.trainerId ?? '',
+      );
 
-  await _firestoreService.updateTicket(updatedTicket);
-  Navigator.pop(context);
-}
-
+      if (ticket != null) {
+        // Mise à jour si un ticket existant est fourni
+        await _firestoreService.updateTicket(updatedTicket);
+      } else {
+        // Création d'un nouveau ticket
+        await _firestoreService.addTicket(updatedTicket);
+      }
+      Navigator.pop(context);
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Modifier Ticket'),
+        title: Text(ticket == null ? 'Ajouter Ticket' : 'Modifier Ticket'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -47,7 +56,7 @@ class EditTicketScreen extends StatelessWidget {
             SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: _submit,
-              child: Text('Enregistrer'),
+              child: Text(ticket == null ? 'Ajouter' : 'Enregistrer'),
             ),
           ],
         ),

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gesttick/screens/User_management_screen.dart';
+import 'package:gesttick/screens/chat_screen.dart';
+import 'package:gesttick/screens/notifications_screen.dart';
+import 'package:gesttick/screens/profile_screen.dart';
+import 'package:gesttick/screens/report_screen.dart';
 import 'package:gesttick/screens/ticket_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:gesttick/models/ticket.dart';
@@ -16,8 +21,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  int _selectedIndex = 0; // Index for bottom navigation bar
-  List<Ticket> _tickets = []; // List of tickets
+  int _selectedIndex = 0;
+  List<Ticket> _tickets = [];
 
   @override
   Widget build(BuildContext context) {
@@ -28,21 +33,22 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Gestion de Tickets'),
       ),
       drawer: _buildDrawer(userProvider),
-      body: _buildBody(userProvider.role ?? 'apprenant'), // Provide default value if role is null
+      body: _buildBody(userProvider.role ?? 'apprenant'),
       bottomNavigationBar: _buildBottomNavigationBar(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CreateTicketScreen()),
-          ).then((_) => _refreshTickets()); // Refresh tickets after creating a new one
-        },
-        child: Icon(Icons.add),
-      ),
+      floatingActionButton: userProvider.role == 'apprenant'
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreateTicketScreen()),
+                ).then((_) => _refreshTickets());
+              },
+              child: Icon(Icons.add),
+            )
+          : null,
     );
   }
 
-  // Method to build the drawer
   Widget _buildDrawer(UserProvider userProvider) {
     return Drawer(
       child: ListView(
@@ -72,9 +78,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: Icon(Icons.list),
-            title: Text('Tickets'),
+            title: Text('Voir mes tickets'),
             onTap: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
             },
           ),
           ListTile(
@@ -82,14 +92,22 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Notification'),
             onTap: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationsScreen()),
+              );
             },
           ),
-          if (userProvider.role == 'administrateur') ...[
+          if (userProvider.role == 'admin') ...[
             ListTile(
               leading: Icon(Icons.assessment),
               title: Text('Rapport'),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ReportScreen()),
+                );
               },
             ),
             ListTile(
@@ -97,6 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text('Gestion des utilisateurs'),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserManagementScreen()),
+                );
               },
             ),
           ],
@@ -105,25 +127,34 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: Icon(Icons.reply_all),
               title: Text('Répondre aux tickets'),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => TrainerTicketScreen()),
                 );
               },
             ),
-            ListTile(
-              leading: Icon(Icons.chat),
-              title: Text('Chat'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
           ],
+          ListTile(
+            leading: Icon(Icons.chat),
+            title: Text('Chat'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ChatScreen()),
+              );
+            },
+          ),
           ListTile(
             leading: Icon(Icons.person),
             title: Text('Profil'),
             onTap: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
             },
           ),
           ListTile(
@@ -139,7 +170,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Method to build the bottom navigation bar
   Widget _buildBottomNavigationBar() {
     return BottomNavigationBar(
       currentIndex: _selectedIndex,
@@ -165,7 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Build body content based on user role
   Widget _buildBody(String role) {
     return StreamBuilder<List<Ticket>>(
       stream: _firestoreService.getTicketsStream(),
@@ -177,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _tickets = snapshot.data!;
 
         switch (role) {
-          case 'administrateur':
+          case 'admin':
             return _buildAdminDashboard();
           case 'formateur':
             return _buildTrainerDashboard();
@@ -190,24 +219,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Admin Dashboard
   Widget _buildAdminDashboard() {
     return _buildTicketList(_tickets);
   }
 
-  // Trainer Dashboard
   Widget _buildTrainerDashboard() {
     // Optionally filter tickets for trainers
     return _buildTicketList(_tickets);
   }
 
-  // Student Dashboard
   Widget _buildStudentDashboard() {
-    final recentTickets = _tickets.where((ticket) => ticket.isRecent()).toList();
+    final myTickets = _tickets.where((ticket) => ticket.studentId == Provider.of<UserProvider>(context, listen: false).user?.uid).toList();
+    final recentTickets = myTickets.where((ticket) => ticket.isRecent()).toList();
     return _buildTicketList(recentTickets);
   }
 
-  // Method to build a list of tickets with TicketCard widget
   Widget _buildTicketList(List<Ticket> tickets) {
     return Column(
       children: [
@@ -231,12 +257,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(
                       builder: (context) => EditTicketScreen(ticket: tickets[index]),
                     ),
-                  ).then((_) => _refreshTickets()); // Refresh tickets after editing
+                  ).then((_) => _refreshTickets());
                 },
                 onDelete: () async {
+                  if (Provider.of<UserProvider>(context, listen: false).role == 'apprenant') {
+                    // Apprenants can't delete tickets
+                    return;
+                  }
                   try {
                     await _firestoreService.deleteTicket(tickets[index].id);
-                    _refreshTickets(); // Refresh tickets after deletion
+                    _refreshTickets();
                   } catch (e) {
                     print('Error deleting ticket: $e');
                   }
@@ -257,7 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Refresh the list of tickets
   void _refreshTickets() {
     setState(() {});
   }

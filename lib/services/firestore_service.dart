@@ -49,18 +49,53 @@ class FirestoreService {
 //
   getUserById(String uid) {}
 
-//method for trainer
-Stream<List<Ticket>> getTicketsForTrainer() {
-    return _db.collection('tickets')
-      .where('status', isEqualTo: 'En attente')
-      .snapshots()
-      .map((snapshot) => snapshot.docs
-      .map((doc) => Ticket.fromDocument(doc))
-      .toList());
+  // Method to fetch tickets for a specific trainer by trainer ID
+  Stream<List<Ticket>> getTicketsForTrainer(String trainerId) {
+    return _db
+        .collection('tickets')
+        .where('trainerId', isEqualTo: trainerId)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Ticket.fromDocument(doc)).toList());
   }
 
+ // Mettre à jour le statut du ticket
+  
   Future<void> updateTicketStatus(String ticketId, String status) async {
-    await _db.collection('tickets').doc(ticketId).update({'status': status});
+    try {
+      await _db.collection('tickets').doc(ticketId).update({'status': status, 'updatedAt': DateTime.now()});
+    } catch (e) {
+      print('Error updating ticket status: $e');
+    }
   }
+
+
+   // Ajouter une réponse à un ticket
+  Future<void> addResponseToTicket(String ticketId, String response, String trainerId) async {
+    try {
+      await _db.collection('tickets').doc(ticketId).update({
+        'response': response,
+        'trainerId': trainerId,
+        'status': 'in_progress',
+        'updatedAt': DateTime.now()
+      });
+    } catch (e) {
+      print('Error adding response to ticket: $e');
+    }
+  }
+
+  // Marquer un ticket comme résolu
+  Future<void> markTicketAsResolved(String ticketId) async {
+    try {
+      await _db.collection('tickets').doc(ticketId).update({
+        'status': 'resolved',
+        'updatedAt': DateTime.now(),
+      });
+    } catch (e) {
+      print('Error marking ticket as resolved: $e');
+    }
+  }
+
+  
 
 }

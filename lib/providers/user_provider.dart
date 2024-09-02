@@ -9,6 +9,8 @@ class UserProvider with ChangeNotifier {
   User? _user;
   String? _role;
 
+  // Ajout de la propriété userId
+  String? get userId => _user?.uid;
   User? get user => _user;
   String? get role => _role;
 
@@ -42,5 +44,4 @@ class UserProvider with ChangeNotifier {
       print('Erreur lors de la déconnexion : $e');
     }
   }
-  
 }
