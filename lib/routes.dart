@@ -4,10 +4,6 @@ import 'package:gesttick/screens/login_screen.dart';
 import 'package:gesttick/screens/register_screen.dart';
 import 'package:gesttick/screens/welcome_screen.dart';
 
-
-
-//import 'screens/login_screen.dart';
-
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {

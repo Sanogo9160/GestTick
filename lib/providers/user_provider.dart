@@ -1,27 +1,46 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gesttick/models/user.dart';
-import 'package:gesttick/services/auth_service.dart';
-import 'package:gesttick/services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserProvider with ChangeNotifier {
-  UserModel? _user;
-  final AuthService _authService = AuthService();
-  final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  UserModel? get user => _user;
+  User? _user;
+  String? _role;
 
-  Future<void> loadUser() async {
-    User? firebaseUser = _authService.getCurrentUser();
-    if (firebaseUser != null) {
-      _user = await _firestoreService.getUserById(firebaseUser.uid);
-      notifyListeners();
-    }
+  User? get user => _user;
+  String? get role => _role;
+
+  UserProvider() {
+    _auth.authStateChanges().listen(_onAuthStateChanged);
   }
 
-  void logout() {
-    _authService.signOut();
-    _user = null;
+  Future<void> _onAuthStateChanged(User? user) async {
+    _user = user;
+    if (_user != null) {
+      try {
+        DocumentSnapshot doc = await _db.collection('users').doc(_user!.uid).get();
+        _role = doc['role'] as String?;
+      } catch (e) {
+        print('Erreur lors de la récupération du rôle : $e');
+        _role = null;
+      }
+    } else {
+      _role = null;
+    }
     notifyListeners();
   }
+
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+      _user = null;
+      _role = null;
+      notifyListeners();
+    } catch (e) {
+      print('Erreur lors de la déconnexion : $e');
+    }
+  }
+  
 }
