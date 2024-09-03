@@ -91,7 +91,7 @@ class Ticket {
     );
   }
 
-  static empty() {}
+
 
 
 }

@@ -80,11 +80,11 @@ class TicketListScreen extends StatelessWidget {
           onEdit: () {
             _editTicket(ticket, context);
           },
-          onDelete: () async {
-            await _deleteTicket(ticket, context);
-          },
           onView: () {
             _viewTicket(ticket, context);
+          },
+          onDelete: () {
+            _deleteTicket(ticket.id, context);
           },
         );
       },
@@ -109,13 +109,15 @@ class TicketListScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _deleteTicket(Ticket ticket, BuildContext context) async {
+Future<void> _deleteTicket(String ticketId, BuildContext context) async {
     try {
-      await _firestoreService.deleteTicket(ticket.id);
+      await _firestoreService.deleteTicket(ticketId);
+      // Optionally show a snackbar or dialog to confirm deletion
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ticket supprimé avec succès.')),
+        SnackBar(content: Text('Ticket supprimé avec succès')),
       );
     } catch (e) {
+      // Handle any errors that might occur during deletion
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors de la suppression du ticket : $e')),
       );

@@ -22,7 +22,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   int _selectedIndex = 0;
-  List<Ticket> _tickets = [];
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Voir mes tickets'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => HomeScreen()),
               );
@@ -117,7 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => UserManagementScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => UserManagementScreen()),
                 );
               },
             ),
@@ -130,7 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => TrainerTicketScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => TrainerTicketScreen()),
                 );
               },
             ),
@@ -203,15 +204,16 @@ class _HomeScreenState extends State<HomeScreen> {
           return Center(child: CircularProgressIndicator());
         }
 
-        _tickets = snapshot.data!;
+        final tickets = snapshot.data!;
 
         switch (role) {
           case 'admin':
-            return _buildAdminDashboard();
+            return _buildTicketList(tickets);
           case 'formateur':
-            return _buildTrainerDashboard();
+            return _buildTicketList(
+                tickets); // You might filter or customize for trainers
           case 'apprenant':
-            return _buildStudentDashboard();
+            return _buildStudentDashboard(tickets);
           default:
             return Center(child: Text('Rôle non reconnu'));
         }
@@ -219,75 +221,75 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAdminDashboard() {
-    return _buildTicketList(_tickets);
-  }
-
-  Widget _buildTrainerDashboard() {
-    // Optionally filter tickets for trainers
-    return _buildTicketList(_tickets);
-  }
-
-  Widget _buildStudentDashboard() {
-    final myTickets = _tickets.where((ticket) => ticket.studentId == Provider.of<UserProvider>(context, listen: false).user?.uid).toList();
-    final recentTickets = myTickets.where((ticket) => ticket.isRecent()).toList();
+  Widget _buildStudentDashboard(List<Ticket> tickets) {
+    final myTickets = tickets
+        .where((ticket) =>
+            ticket.studentId ==
+            Provider.of<UserProvider>(context, listen: false).user?.uid)
+        .toList();
+    final recentTickets =
+        myTickets.where((ticket) => ticket.isRecent()).toList();
     return _buildTicketList(recentTickets);
   }
 
   Widget _buildTicketList(List<Ticket> tickets) {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: tickets.length,
-            itemBuilder: (context, index) {
-              return TicketCard(
-                ticket: tickets[index],
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TicketDetailScreen(ticket: tickets[index]),
-                    ),
-                  );
-                },
-                onEdit: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditTicketScreen(ticket: tickets[index]),
-                    ),
-                  ).then((_) => _refreshTickets());
-                },
-                onDelete: () async {
-                  if (Provider.of<UserProvider>(context, listen: false).role == 'apprenant') {
-                    // Apprenants can't delete tickets
-                    return;
-                  }
-                  try {
-                    await _firestoreService.deleteTicket(tickets[index].id);
-                    _refreshTickets();
-                  } catch (e) {
-                    print('Error deleting ticket: $e');
-                  }
-                },
-                onView: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TicketDetailScreen(ticket: tickets[index]),
-                    ),
-                  );
-                },
+    return ListView.builder(
+      itemCount: tickets.length,
+      itemBuilder: (context, index) {
+        return TicketCard(
+            ticket: tickets[index],
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      TicketDetailScreen(ticket: tickets[index]),
+                ),
               );
             },
-          ),
-        ),
-      ],
+            onEdit: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EditTicketScreen(ticket: tickets[index]),
+                ),
+              ).then((_) => _refreshTickets());
+            },
+            onView: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      TicketDetailScreen(ticket: tickets[index]),
+                ),
+              );
+            },
+            onDelete: () async {
+              await _deleteTicket(tickets[index].id);
+            },
+
+          );
+      },
     );
+  }
+
+   Future<void> _deleteTicket(String ticketId) async {
+    try {
+      await _firestoreService.deleteTicket(ticketId);
+      _refreshTickets();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la suppression du ticket : $e')),
+      );
+    }
   }
 
   void _refreshTickets() {
     setState(() {});
   }
+
+  
 }
+
+

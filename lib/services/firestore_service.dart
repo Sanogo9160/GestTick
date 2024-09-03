@@ -35,16 +35,18 @@ class FirestoreService {
     }
   }
 
- 
   // Supprimer un ticket
-  Future<void> deleteTicket(String ticketId) async {
+
+   Future<void> deleteTicket(String ticketId) async {
     try {
-      await _db.collection('tickets').doc(ticketId).delete();
+      DocumentReference ticketRef = _db.collection('tickets').doc(ticketId);
+      await ticketRef.delete();
+      print('Ticket with ID $ticketId deleted successfully');
     } catch (e) {
-      print(e.toString());
+      print('Error deleting ticket with ID $ticketId: $e');
+      throw e; 
     }
   }
-
 
 //
   getUserById(String uid) {}
