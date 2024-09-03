@@ -61,7 +61,6 @@ class Ticket {
 
     // Convert Timestamp to DateTime
     final createdAtDateTime = createdAt.toDate();
-
     return createdAtDateTime.isAfter(sevenDaysAgo);
   }
 

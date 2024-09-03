@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -10,7 +11,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late AnimationController _controller;
   late Animation<double> _logoAnimation;
   late Animation<double> _textAnimation;
-  late Animation<double> _buttonAnimation;
 
   @override
   void initState() {
@@ -31,12 +31,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       curve: Curves.easeInOut,
     );
 
-    _buttonAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-
     _controller.forward();
+
+    // Timer to navigate to login screen 
+    Timer(Duration(seconds: 5), () {
+      Navigator.pushReplacementNamed(context, '/login');
+    });
   }
 
   @override
@@ -102,30 +102,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                   ),
                   SizedBox(height: 30),
-                  // Bouton animé
-                  ScaleTransition(
-                    scale: _buttonAnimation,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.deepPurple, // Couleur du texte du bouton
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        elevation: 5, // Ombrage pour le bouton
-                      ),
-                      child: Text(
-                        'Commencer',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
             ),

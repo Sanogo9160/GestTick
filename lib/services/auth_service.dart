@@ -6,18 +6,16 @@ class AuthService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Mise à jour de la méthode d'inscription pour inclure le statut par défaut
-
-  
   Future<bool> registerWithEmailAndPassword(
-    String email, 
-    String password, 
-    String role, 
-    String fullName, 
+    String email,
+    String password,
+    String role,
+    String fullName,
     String phone
   ) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email, 
+        email: email,
         password: password
       );
       User? user = result.user;
@@ -26,44 +24,56 @@ class AuthService {
         await _db.collection('users').doc(user.uid).set({
           'email': email,
           'role': role,
-          'fullName': fullName,    
+          'fullName': fullName,
           'phone': phone,
-          'status': 'pending',  // Statut par défaut
+          'status': 'pending', // Statut par défaut
         });
+        return true;
       }
-      return true;
     } catch (e) {
       print('Erreur d\'inscription: $e');
-      return false;
     }
+    return false;
   }
 
+  // Méthode pour que l'administrateur approuve un utilisateur
+  Future<bool> approveUser(String uid) async {
+    try {
+      await _db.collection('users').doc(uid).update({
+        'status': 'approved',
+      });
+      return true;
+    } catch (e) {
+      print('Erreur lors de l\'approbation de l\'utilisateur: $e');
+    }
+    return false;
+  }
 
 Future<bool> signInWithEmailAndPassword(String email, String password) async {
   try {
     UserCredential result = await _auth.signInWithEmailAndPassword(
-      email: email, 
-      password: password
+      email: email,
+      password: password,
     );
     User? user = result.user;
 
     if (user != null) {
       DocumentSnapshot<Map<String, dynamic>> doc = await _db.collection('users').doc(user.uid).get();
       final data = doc.data();
-      // Vérifier si l'utilisateur est approuvé
-      if (data?['status'] == 'approved') {
+      print('User data: $data'); // Log des données utilisateur
+      if (data?['status'] == 'approuvé') {
         return true;
       } else {
         await _auth.signOut();
         print('Compte non approuvé');
       }
     }
-    return false;
   } catch (e) {
     print('Erreur de connexion: $e');
-    return false;
   }
+  return false;
 }
+
 
 
   User? getCurrentUser() {
@@ -97,13 +107,11 @@ Future<bool> signInWithEmailAndPassword(String email, String password) async {
     const adminPhone = '90900987';
 
     try {
-      // Vérifier si l'utilisateur admin existe
       QuerySnapshot<Map<String, dynamic>> snapshot = await _db.collection('users')
         .where('email', isEqualTo: adminEmail)
         .get();
       
       if (snapshot.docs.isEmpty) {
-        // Créer l'utilisateur admin
         UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: adminEmail,
           password: adminPassword,
@@ -116,7 +124,7 @@ Future<bool> signInWithEmailAndPassword(String email, String password) async {
             'role': adminRole,
             'fullName': adminFullName,
             'phone': adminPhone,
-            'status': 'approved',  // L'admin est approuvé par défaut
+            'status': 'approuvé',  // L'admin est approuvé par défaut
           });
         }
       } else {
@@ -124,19 +132,6 @@ Future<bool> signInWithEmailAndPassword(String email, String password) async {
       }
     } catch (e) {
       print('Erreur lors de la création de l\'admin : $e');
-    }
-  }
-
-  // Méthode pour que l'administrateur approuve un utilisateur
-  Future<bool> approveUser(String uid) async {
-    try {
-      await _db.collection('users').doc(uid).update({
-        'status': 'approved',
-      });
-      return true;
-    } catch (e) {
-      print('Erreur lors de l\'approbation de l\'utilisateur: $e');
-      return false;
     }
   }
 }

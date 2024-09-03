@@ -9,7 +9,6 @@ class UserProvider with ChangeNotifier {
   User? _user;
   String? _role;
 
-  // Ajout de la propriété userId
   String? get userId => _user?.uid;
   User? get user => _user;
   String? get role => _role;
@@ -22,8 +21,8 @@ class UserProvider with ChangeNotifier {
     _user = user;
     if (_user != null) {
       try {
-        DocumentSnapshot doc = await _db.collection('users').doc(_user!.uid).get();
-        _role = doc['role'] as String?;
+        DocumentSnapshot<Map<String, dynamic>> doc = await _db.collection('users').doc(_user!.uid).get();
+        _role = doc.data()?['role'] as String?;
       } catch (e) {
         print('Erreur lors de la récupération du rôle : $e');
         _role = null;
