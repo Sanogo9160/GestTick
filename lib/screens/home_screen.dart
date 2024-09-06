@@ -260,7 +260,8 @@ void _handleAction(String action, Ticket ticket) {
       );
       break;
     case 'take_charge':
-     _updateTicketStatus(ticket.id, 'En cours'); // Mise à jour du statut à "En cours"
+     _updateTicketStatus(ticket.id, 'En cours');
+      // Mise à jour du statut à "En cours"
   break;
       // Implement taking charge of the ticket
       break;
@@ -298,6 +299,17 @@ void _handleAction(String action, Ticket ticket) {
           ListTile(
             leading: Icon(Icons.list),
             title: Text('Voir tickets'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ViewTicketsScreen()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading: Icon(Icons.list),
+            title: Text('Historique ticket'),
             onTap: () {
               Navigator.push(
                 context,
