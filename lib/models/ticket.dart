@@ -10,6 +10,7 @@ class Ticket {
   Timestamp updatedAt;
   String studentId;
   String trainerId;
+  //final String? number; // Champ optionnel pour le numéro du ticket
   
 
   Ticket({
@@ -22,24 +23,25 @@ class Ticket {
     required this.updatedAt,
     required this.studentId,
     required this.trainerId,
+    
      
   });
 
   factory Ticket.fromDocument(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Ticket(
-      id: doc.id,
-      title: data['title'] ?? '',
-      description: data['description'] ?? '',
-      status: data['status'] ?? 'Attente',
-      category: data['category'] ?? '',
-      createdAt: data['createdAt'] as Timestamp,
-      updatedAt: data['updatedAt'] as Timestamp,
-      studentId: data['studentId'] ?? '',
-      trainerId: data['trainerId'] ?? '',
-     
-    );
-  }
+  final data = doc.data() as Map<String, dynamic>;
+  return Ticket(
+    id: doc.id,
+    title: data['title'] ?? '',
+    description: data['description'] ?? '',
+    status: data['status'] ?? 'Attente',
+    category: data['category'] ?? '',
+    createdAt: data['createdAt'] as Timestamp,
+    updatedAt: data['updatedAt'] as Timestamp,
+    studentId: data['studentId'] ?? '',
+    trainerId: data['trainerId'] ?? '',
+  );
+}
+
 
   Map<String, dynamic> toMap() {
     return {
@@ -51,6 +53,7 @@ class Ticket {
       'updatedAt': updatedAt,
       'studentId': studentId,
       'trainerId': trainerId,
+    
     };
   }
 
@@ -91,6 +94,16 @@ class Ticket {
     );
   }
 
+  // Pour la recherche
+  bool matchesQuery(String query) {
+      final lowerCaseQuery = query.toLowerCase();
+      return title.toLowerCase().contains(lowerCaseQuery) ||
+            description.toLowerCase().contains(lowerCaseQuery) ||
+            category.toLowerCase().contains(lowerCaseQuery) ||
+            status.toLowerCase().contains(lowerCaseQuery); 
+    }
+
+  static fromFirestore(QueryDocumentSnapshot<Object?> doc) {}
 
 
 

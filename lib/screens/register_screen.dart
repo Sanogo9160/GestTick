@@ -9,20 +9,19 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _fullNameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   String _selectedRole = 'apprenant';
   bool _passwordObscureText = true;
   bool _confirmPasswordObscureText = true;
-  bool _isButtonActive = false;  // Variable pour contrôler l'état du bouton
+  bool _isButtonActive = false;
 
   @override
   void initState() {
     super.initState();
-    // Ajouter des écouteurs pour surveiller les changements dans les champs de texte
     _emailController.addListener(_validateFields);
     _passwordController.addListener(_validateFields);
     _confirmPasswordController.addListener(_validateFields);
@@ -30,7 +29,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneController.addListener(_validateFields);
   }
 
-  // Fonction pour valider les champs et mettre à jour l'état du bouton
   void _validateFields() {
     setState(() {
       _isButtonActive = _emailController.text.isNotEmpty &&
@@ -79,9 +77,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // Fonction pour valider le numéro de téléphone
   String? _validatePhoneNumber(String? value) {
-    final phonePattern = r'^\+?[0-9]{10,15}$'; // Exemple de pattern pour un numéro international
+    final phonePattern = r'^\+?[0-9]{10,15}$';
     final regExp = RegExp(phonePattern);
     if (value == null || value.isEmpty) {
       return 'Veuillez entrer un numéro de téléphone';
@@ -95,92 +92,130 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inscription'),
         backgroundColor: Colors.deepPurple,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(30.0),
+          ),
+        ),
+        toolbarHeight: 150, // Augmente la hauteur pour le logo
+        flexibleSpace: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Image.asset(
+                    'assets/images/logo2.png',
+                    width: 90, // Ajustez la largeur du logo
+                    height: 90,
+                  ),
+                ),
+              ),
+              SizedBox(height: 10), // Espace entre le logo et le texte
+              Text(
+                'Créer votre compte',
+                style: TextStyle(
+                  fontSize: 22,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-            _buildTextField(
-              controller: _fullNameController,
-              label: 'Nom complet',
-              hintText: 'Entrez votre nom complet',
-              icon: Icons.person,
-            ),
-            SizedBox(height: 16.0),
-            _buildTextField(
-              controller: _emailController,
-              label: 'Email',
-              hintText: 'Entrez votre email',
-              icon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            SizedBox(height: 16.0),
-            _buildPasswordField(
-              controller: _passwordController,
-              label: 'Mot de passe',
-              hintText: 'Entrez votre mot de passe',
-              obscureText: _passwordObscureText,
-              toggleVisibility: _togglePasswordVisibility,
-            ),
-            SizedBox(height: 16.0),
-            _buildPasswordField(
-              controller: _confirmPasswordController,
-              label: 'Confirmez le mot de passe',
-              hintText: 'Confirmez votre mot de passe',
-              obscureText: _confirmPasswordObscureText,
-              toggleVisibility: _toggleConfirmPasswordVisibility,
-            ),
-            SizedBox(height: 16.0),
-            // Utiliser TextFormField pour validation
-            TextFormField(
-              controller: _phoneController,
-              decoration: InputDecoration(
-                labelText: 'Numéro de téléphone',
-                hintText: 'Entrez votre numéro de téléphone',
-                prefixIcon: Icon(Icons.phone, color: Colors.deepPurple),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 10), // l'espace en haut
+                _buildTextField(
+                  controller: _fullNameController,
+                  label: 'Nom complet',
+                  hintText: 'Entrez votre nom complet',
+                  icon: Icons.person,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+                SizedBox(height: 4.0), // l'espace entre les champs
+                _buildTextField(
+                  controller: _emailController,
+                  label: 'Email',
+                  hintText: 'Entrez votre email',
+                  icon: Icons.email,
+                  keyboardType: TextInputType.emailAddress,
                 ),
-              ),
-              keyboardType: TextInputType.phone,
-              validator: _validatePhoneNumber,
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              'Rôle',
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-            ),
-            SizedBox(height: 8.0),
-            DropdownButtonFormField<String>(
-              value: _selectedRole,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedRole = newValue!;
-                });
-              },
-              items: <String>['apprenant', 'formateur']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+                SizedBox(height: 4.0), // l'espace entre les champs
+                _buildPasswordField(
+                  controller: _passwordController,
+                  label: 'Mot de passe',
+                  hintText: 'Entrez votre mot de passe',
+                  obscureText: _passwordObscureText,
+                  toggleVisibility: _togglePasswordVisibility,
                 ),
-              ),
+                SizedBox(height: 4.0), // l'espace entre les champs
+                _buildPasswordField(
+                  controller: _confirmPasswordController,
+                  label: 'Confirmez le mot de passe',
+                  hintText: 'Confirmez votre mot de passe',
+                  obscureText: _confirmPasswordObscureText,
+                  toggleVisibility: _toggleConfirmPasswordVisibility,
+                ),
+                SizedBox(height: 4.0), // Réduit l'espace entre les champs
+                _buildTextField(
+                  controller: _phoneController,
+                  label: 'Numéro de téléphone',
+                  hintText: 'Entrez votre numéro de téléphone',
+                  icon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                ),
+                SizedBox(height: 4.0), // l'espace entre les champs
+                _buildRoleDropdown(),
+                SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity, 
+                  child: _buildRegisterButton(),
+                ),
+                SizedBox(height: 20),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Vous avez déjà un compte ? ',
+                        style: TextStyle(color: Colors.black54, fontSize: 16),
+                      ),
+                      TextSpan(
+                        text: 'Connectez-vous',
+                        style: TextStyle(
+                          color: Colors.deepPurple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          },
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            SizedBox(height: 20),
-            _buildRegisterButton(),
-          ],
+          ),
         ),
       ),
     );
@@ -193,20 +228,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        prefixIcon: Icon(icon, color: Colors.deepPurple),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Material(
+        elevation: 5.0,
+        borderRadius: BorderRadius.circular(12.0),
+        child: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hintText,
+            prefixIcon: Icon(icon, color: Colors.deepPurple),
+            border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          ),
+          keyboardType: keyboardType,
         ),
       ),
-      keyboardType: keyboardType,
     );
   }
 
@@ -217,61 +256,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required bool obscureText,
     required VoidCallback toggleVisibility,
   }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        prefixIcon: Icon(Icons.lock, color: Colors.deepPurple),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscureText ? Icons.visibility : Icons.visibility_off,
-            color: Colors.deepPurple,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Material(
+        elevation: 5.0,
+        borderRadius: BorderRadius.circular(12.0),
+        child: TextField(
+          controller: controller,
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hintText,
+            prefixIcon: Icon(Icons.lock, color: Colors.deepPurple),
+            suffixIcon: IconButton(
+              icon: Icon(
+                obscureText ? Icons.visibility : Icons.visibility_off,
+                color: Colors.deepPurple,
+              ),
+              onPressed: toggleVisibility,
+            ),
+            border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           ),
-          onPressed: toggleVisibility,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2.0),
+      ),
+    );
+  }
+
+  Widget _buildRoleDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Material(
+        elevation: 5.0,
+        borderRadius: BorderRadius.circular(12.0),
+        child: DropdownButtonFormField<String>(
+          value: _selectedRole,
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedRole = newValue!;
+            });
+          },
+          items: <String>['apprenant', 'formateur']
+              .map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value, style: TextStyle(color: Colors.deepPurple)),
+            );
+          }).toList(),
+          decoration: InputDecoration(
+            labelText: 'Rôle',
+            prefixIcon: Icon(Icons.person, color: Colors.deepPurple),
+            border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildRegisterButton() {
-    return GestureDetector(
-      onTap: _isButtonActive ? _register : null,  // Désactiver l'action si le bouton est désactivé
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        width: double.infinity,
-        height: 50.0,
-        decoration: BoxDecoration(
-          gradient: _isButtonActive
-              ? LinearGradient(
-                  colors: [Colors.deepPurple, Colors.purpleAccent],  // Couleur active
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : LinearGradient(
-                  colors: [Colors.grey, Colors.grey.shade400],  // Couleur désactivée
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
+    return ElevatedButton(
+      onPressed: _isButtonActive ? _register : null,
+      child: Text('S\'inscrire', style: TextStyle(fontSize: 16)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.deepPurple,
+        padding: EdgeInsets.symmetric(vertical: 14.0),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: Center(
-          child: Text(
-            'S\'inscrire',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ),
       ),
     );

@@ -1,9 +1,6 @@
-// lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
-import 'package:gesttick/providers/user_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -74,26 +71,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (user != null) {
         try {
-          // Update user profile information
           await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
             'fullName': _fullNameController.text,
             'email': _emailController.text,
             'phone': _phoneController.text,
           });
 
-          // Update user password if changed
           if (_newPasswordController.text.isNotEmpty &&
               _newPasswordController.text == _confirmNewPasswordController.text) {
             try {
-              // Re-authenticate the user with current password
               final credential = EmailAuthProvider.credential(
                 email: user.email!,
                 password: _currentPasswordController.text,
               );
 
               await user.reauthenticateWithCredential(credential);
-
-              // Update password
               await user.updatePassword(_newPasswordController.text);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Mot de passe mis à jour')));
             } catch (e) {
@@ -119,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text('Mon Profil'),
       ),
-      body: Padding(
+      body: SingleChildScrollView( // Ajout du scroll
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -164,7 +156,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildPasswordField(
                   controller: _currentPasswordController,
                   label: 'Mot de passe actuel',
-                  obscureText: true, toggleVisibility: () {  },
+                  obscureText: true,
+                  toggleVisibility: () {  },
                 ),
               SizedBox(height: 16.0),
               if (_isEditing) 
@@ -186,27 +179,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.edit, color: Colors.deepPurple),
-                    onPressed: () {
-                      setState(() {
-                        _isEditing = true;
-                      });
-                    },
-                  ),
-                  if (_isEditing)
-                    IconButton(
-                      icon: Icon(Icons.cancel, color: Colors.redAccent),
+                  if (!_isEditing) 
+                    TextButton.icon(
+                      icon: Icon(Icons.edit, color: Colors.deepPurple),
+                      label: Text("Modifier"),
                       onPressed: () {
                         setState(() {
-                          _isEditing = false;
-                          _loadUserData(); // Reload user data to discard changes
+                          _isEditing = true;
                         });
                       },
                     ),
                   if (_isEditing)
-                    IconButton(
+                    TextButton.icon(
+                      icon: Icon(Icons.cancel, color: Colors.redAccent),
+                      label: Text("Annuler"),
+                      onPressed: () {
+                        setState(() {
+                          _isEditing = false;
+                          _loadUserData(); 
+                        });
+                      },
+                    ),
+                  if (_isEditing)
+                    TextButton.icon(
                       icon: Icon(Icons.save, color: Colors.green),
+                      label: Text("Enregistrer"),
                       onPressed: _saveProfile,
                     ),
                 ],
@@ -266,12 +263,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       obscureText: obscureText,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer un mot de passe';
-        }
-        return null;
-      },
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class NotificationModel {
   String id;
   String title;
@@ -13,25 +15,26 @@ class NotificationModel {
     required this.createdAt,
   });
 
-  // Méthode pour convertir un document Firestore en objet Notification
-  factory NotificationModel.fromFirestore(Map<String, dynamic> data) {
+  // Méthode pour convertir un document Firestore en objet NotificationModel
+  factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    
     return NotificationModel(
-      id: data['id'],
-      title: data['title'],
-      body: data['body'],
-      userId: data['userId'],
-      createdAt: DateTime.parse(data['createdAt']),
+      id: doc.id, // Utilisation de l'ID du document Firestore
+      title: data['title'] ?? '', // Valeur par défaut si null
+      body: data['body'] ?? '',   // Valeur par défaut si null
+      userId: data['userId'] ?? '', // Valeur par défaut si null
+      createdAt: (data['createdAt'] as Timestamp).toDate(), // Conversion de Timestamp à DateTime
     );
   }
 
-  // Méthode pour convertir un objet Notification en Map
+  // Méthode pour convertir un objet NotificationModel en Map
   Map<String, dynamic> toFirestore() {
     return {
-      'id': id,
       'title': title,
       'body': body,
       'userId': userId,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt), // Conversion de DateTime à Timestamp
     };
   }
 }

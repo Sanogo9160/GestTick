@@ -17,13 +17,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     super.initState();
 
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
       vsync: this,
-    )..repeat(reverse: true);
+    );
 
     _logoAnimation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeIn,
+      curve: Curves.elasticOut,
     );
 
     _textAnimation = CurvedAnimation(
@@ -33,8 +33,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     _controller.forward();
 
-    // Timer to navigate to login screen 
-    Timer(Duration(seconds: 5), () {
+    // Naviguer vers l'écran de connexion après un délai
+    Timer(Duration(seconds: 6), () {
       Navigator.pushReplacementNamed(context, '/login');
     });
   }
@@ -48,61 +48,64 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepPurple, // Fond coloré
       body: Stack(
         children: [
-          // Fond blanc pour l'écran
-          Container(
-            color: Colors.white,
-            child: Center(
+          Align(
+            alignment: Alignment.topCenter,
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Logo animé
+                  // Logo animé avec effet élastique
                   ScaleTransition(
                     scale: _logoAnimation,
-                    child: Image.asset(
-                      'assets/images/logo2.png',
-                      height: 100,
+                    child: CircleAvatar(
+                      radius: 80,
+                      backgroundColor: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Image.asset(
+                          'assets/images/logo2.png',
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: 40),
-                  // Texte de bienvenue animé
+                  // Texte de bienvenue avec animation douce
                   FadeTransition(
                     opacity: _textAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Bienvenue sur GestTicket',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
+                    child: Text(
+                      'Bienvenue sur GestTicket',
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   SizedBox(height: 20),
-                  // Commentaire d'encouragement animé
+                  // Message d'encouragement avec un style plus léger et espacement ajusté
                   FadeTransition(
                     opacity: _textAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Avec GestTicket, bénéficiez d\'une aide rapide et personnalisée pour vos questions ou problèmes liés à la formation. Soumettez facilement vos tickets et obtenez des réponses efficaces de vos formateurs. Nous sommes là pour vous soutenir à chaque étape de votre apprentissage!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.normal,
-                          height: 1.5, // Espacement entre les lignes
-                        ),
-                        textAlign: TextAlign.center,
+                    child: Text(
+                      'Obtenez de l\'aide rapidement et efficacement grâce à GestTicket. Soumettez vos tickets et recevez des réponses rapides de vos formateurs pour faciliter votre apprentissage.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w400,
+                        height: 1.6, // l'espacement des lignes
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   SizedBox(height: 30),
-                  
                 ],
               ),
             ),
