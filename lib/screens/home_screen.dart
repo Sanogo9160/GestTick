@@ -8,8 +8,8 @@ import 'package:gesttick/screens/report_screen.dart';
 import 'package:gesttick/screens/ticket_answers_Screen.dart';
 import 'package:gesttick/screens/ticket_details_screen.dart';
 import 'package:gesttick/screens/create_ticket_screen.dart';
-import 'package:gesttick/screens/edit_ticket_screen.dart'; 
-import 'package:gesttick/screens/profile_screen.dart'; 
+import 'package:gesttick/screens/edit_ticket_screen.dart'; // Import the Edit Ticket screen
+import 'package:gesttick/screens/profile_screen.dart'; // Import the Profile screen
 import 'package:gesttick/services/firestore_service.dart';
 import 'package:provider/provider.dart';
 import 'package:gesttick/providers/user_provider.dart';
@@ -53,14 +53,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _updateTicketStatus(String ticketId, String status) async {
-    try {
-      await FirestoreService().updateTicketStatus(ticketId, status);
-      // Vous pouvez ajouter une notification ou une mise à jour de l'UI ici
-    } catch (e) {
-      print('Erreur lors de la mise à jour du statut : $e');
-    }
+  //
+void _updateTicketStatus(String ticketId, String status) async {
+  try {
+    await FirestoreService().updateTicketStatus(ticketId, status);
+    // Vous pouvez ajouter une notification ou une mise à jour de l'UI ici
+  } catch (e) {
+    print('Erreur lors de la mise à jour du statut : $e');
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -214,6 +215,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+
   List<Map<String, dynamic>> _buildActionsForUser(String role) {
     final actions = [
       if (role != 'formateur') ...[
@@ -237,39 +240,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return actions;
   }
 
-  void _handleAction(String action, Ticket ticket) {
-    switch (action) {
-      case 'edit':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => EditTicketScreen(ticket: ticket)),
-        ).then((_) => _fetchRecentTickets()); // Refresh the tickets after editing
-        break;
-      case 'delete':
-        _deleteTicket(ticket.id); // Delete ticket
-        break;
-      case 'view_details':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => TicketDetailScreen(ticket: ticket)), // Navigate to TicketDetailScreen
-        );
-        break;
-      case 'take_charge':
-        _updateTicketStatus(ticket.id, 'En cours'); // Mise à jour du statut à "En cours"
-        break;
-      case 'reply':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => TicketAnswersScreen(ticket: ticket)),
-        );
-        break;
-      default:
-        break;
-    }
+void _handleAction(String action, Ticket ticket) {
+  switch (action) {
+    case 'edit':
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => EditTicketScreen(ticket: ticket)),
+      ).then((_) => _fetchRecentTickets()); // Refresh the tickets after editing
+      break;
+    case 'delete':
+      _deleteTicket(ticket.id); // Delete ticket
+      break;
+    case 'view_details':
+       Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => TicketDetailScreen(ticket: ticket)), // Navigate to TicketDetailScreen
+      );
+      break;
+    case 'take_charge':
+     _updateTicketStatus(ticket.id, 'En cours'); // Mise à jour du statut à "En cours"
+  break;
+      // Implement taking charge of the ticket
+      break;
+    case 'reply':
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => TicketAnswersScreen(ticket: ticket)),
+            );
+    break;
+    
+    default:
+      break;
   }
+}
 
   Widget _buildDrawer(UserProvider userProvider) {
     return Drawer(
@@ -301,53 +307,58 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: Icon(Icons.notifications),
-            title: Text('Notifications'),
+            title: Text('Notification'),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationsScreen()),
+                MaterialPageRoute(builder: (context) => NotificationsScreen()), // Implement NotificationsScreen
               );
             },
           ),
-          ListTile(
-            leading: Icon(Icons.report),
-            title: Text('Rapports'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ReportScreen()),
-              );
-            },
-          ),
-          if (userProvider.role == 'formateur') // Show this menu item only for formateurs
+          if (userProvider.role == 'admin') ...[
             ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Gestion des utilisateurs'),
+              leading: Icon(Icons.assessment),
+              title: Text('Rapport'),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => UserManagementScreen()),
+                  MaterialPageRoute(builder: (context) => ReportScreen()), // Implement ReportScreen
                 );
               },
             ),
+            ListTile(
+              leading: Icon(Icons.people),
+              title: Text('Liste des utilisateurs'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserManagementScreen()), // Implement UserListScreen
+                );
+              },
+            ),
+          ],
+          if (userProvider.role == 'formateur') ...[
+            
+          ],
           ListTile(
             leading: Icon(Icons.person),
             title: Text('Profil'),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
+                MaterialPageRoute(builder: (context) => ProfileScreen()), // Navigate to ProfileScreen
               );
             },
           ),
           ListTile(
-            leading: Icon(Icons.exit_to_app),
-            title: Text('Déconnexion'),
-            onTap: () {
-              // Implement logout functionality here
-              Navigator.pop(context);
-            },
-          ),
+          leading: Icon(Icons.logout),
+          title: Text('Se déconnecter'),
+          onTap: () async {
+            await userProvider.signOut();
+            Navigator.of(context).pushReplacementNamed('/login');
+          },
+        ),
+
         ],
       ),
     );
